@@ -1,4 +1,4 @@
-# DepthImage2Pointcloud2
+# depthimage_to_pointcloud2
 Modified from https://github.com/ros2/turtlebot2_demo
 
 ## Usage examples 
