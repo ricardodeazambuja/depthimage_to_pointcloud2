@@ -41,7 +41,7 @@ class Depthimage2Pointcloud2 : public rclcpp::Node
 {
   public:
     Depthimage2Pointcloud2()
-    : Node("minimal_publisher")
+    : Node("depthimage_to_pointcloud2_node")
     {
       g_pub_point_cloud = this->create_publisher<sensor_msgs::msg::PointCloud2>("pointcloud2", 10);
 
