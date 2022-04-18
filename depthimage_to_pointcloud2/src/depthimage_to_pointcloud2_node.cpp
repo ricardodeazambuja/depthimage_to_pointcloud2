@@ -40,8 +40,8 @@ using std::placeholders::_1;
 class Depthimage2Pointcloud2 : public rclcpp::Node
 {
   public:
-    Depthimage2Pointcloud2()
-    : Node("depthimage_to_pointcloud2_node")
+    Depthimage2Pointcloud2(const rclcpp::NodeOptions & options)
+    : Node("depthimage_to_pointcloud2_node", options)
     {
       g_pub_point_cloud = this->create_publisher<sensor_msgs::msg::PointCloud2>("pointcloud2", 10);
 
@@ -109,7 +109,7 @@ class Depthimage2Pointcloud2 : public rclcpp::Node
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<Depthimage2Pointcloud2>());
+  rclcpp::spin(std::make_shared<Depthimage2Pointcloud2>(rclcpp::NodeOptions()));
   rclcpp::shutdown();
   return 0;
 }
