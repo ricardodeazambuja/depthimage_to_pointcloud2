@@ -5,7 +5,7 @@ Modified from https://github.com/ros2/turtlebot2_demo/tree/a612ef2b9b63ba9d19513
 
 ### [Command line remapping](https://docs.ros.org/en/galactic/How-To-Guides/Node-arguments.html):
 ```
-ros2 run depthimage_to_pointcloud2 depthimage_to_pointcloud2_node --ros-args -r depth:=/my_depth_sensor/image -r depth_camera_info:=/my_depth_sensor/camera_info -r pointcloud2:=/my_output_topic -r __node:=my_new_node_name
+ros2 run depthimage_to_pointcloud2 depthimage_to_pointcloud2_node --ros-args -r depth:=/my_depth_sensor/image -r depth_camera_info:=/my_depth_sensor/camera_info -r pointcloud2:=/my_output_topic -r __node:=my_new_node_name -p range_max:=19.0
 ```
 
 ### [Launch file](https://docs.ros.org/en/galactic/Tutorials/Launch/Creating-Launch-Files.html?highlight=remappings):
@@ -19,8 +19,9 @@ def generate_launch_description():
         executable="depthimage_to_pointcloud2_node",
         output='screen',
         name=`my_node_name`,
+        parameters=[{'range_max': '0.0'}],
         remappings=[
-            ("depth", "/my_depth_sensor/image"),
+            ("depth", "/my_depth_sensor/image"s),
             ("depth_camera_info", "/my_depth_sensor/camera_info"),
             ("pointcloud2", "/my_output_topic")
             ]
@@ -41,11 +42,16 @@ def generate_launch_description():
             'full_sensor_topic',
             default_value=['/my_depth_sensor'],
             description='Base for topic (and node) names'),
+        DeclareLaunchArgument(
+            'range_max',
+            default_value='0.0',
+            description='Max range of depth sensor'),
         Node(
         package="depthimage_to_pointcloud2",
         executable="depthimage_to_pointcloud2_node",
         output='screen',
         name=[PythonExpression(["'", LaunchConfiguration('full_sensor_topic'), "'.split('/')[-1]"]), '_depth2pc2'],
+        parameters=[{'range_max': LaunchConfiguration('range_max')}],
         remappings=[
             ("depth", [LaunchConfiguration('full_sensor_topic'), "/image"]),
             ("depth_camera_info", [LaunchConfiguration('full_sensor_topic'), "/camera_info"]),

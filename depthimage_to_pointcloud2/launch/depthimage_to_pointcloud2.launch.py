@@ -9,11 +9,16 @@ def generate_launch_description():
             'full_sensor_topic',
             default_value=['/my_depth_sensor'],
             description='Base for topic (and node) names'),
+        DeclareLaunchArgument(
+            'range_max',
+            default_value='0.0',
+            description='Max range of depth sensor'),
         Node(
         package="depthimage_to_pointcloud2",
         executable="depthimage_to_pointcloud2_node",
         output='screen',
         name=[PythonExpression(["'", LaunchConfiguration('full_sensor_topic'), "'.split('/')[-1]"]), '_depth2pc2'],
+        parameters=[{'range_max': LaunchConfiguration('range_max')}],
         remappings=[
             ("depth", [LaunchConfiguration('full_sensor_topic'), "/image"]),
             ("depth_camera_info", [LaunchConfiguration('full_sensor_topic'), "/camera_info"]),

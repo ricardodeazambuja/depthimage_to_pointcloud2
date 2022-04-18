@@ -82,6 +82,11 @@ void convert(
           *iter_x = *iter_y = *iter_z = bad_point;
           continue;
         }
+      } else if (range_max != 0.0) {
+        if (depth > DepthTraits<T>::fromMeters(range_max)) {
+          *iter_x = *iter_y = *iter_z = bad_point;
+          continue;
+        }
       }
 
       // Fill in XYZ
