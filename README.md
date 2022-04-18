@@ -66,13 +66,14 @@ And considering my `full_sensor_topic` is `/my_weird/depth_sensor`:
 $ ros2 launch depthimage_to_pointcloud2 depthimage_to_pointcloud2.launch.py full_sensor_topic:=/my_weird/depth_sensor
 ```
 
-It will be looking at the topics:
+It will subscribe to the topics:
 ```
 /my_weird/depth_sensor/image
 /my_weird/depth_sensor/camera_info
 ```
-And publishing the pointcloud2:
+
+And publish the pointcloud2 on:
 ```
 /depth_sensor_pointcloud2
 ```
-Finally, the node name will also be `/depth_sensor_pointcloud2`.
+Finally, the node name will be `/depth_sensor_pointcloud2` because it gets the `depth_sensor` after splitting (`\`) the `full_sensor_topic` and getting the last item.
