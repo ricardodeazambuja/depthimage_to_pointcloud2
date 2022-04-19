@@ -1,5 +1,7 @@
 # depthimage_to_pointcloud2
 Modified from https://github.com/ros2/turtlebot2_demo/tree/a612ef2b9b63ba9d19513b67c1d6e5eede680cdf
+![colorful_pointcloud2](https://user-images.githubusercontent.com/6606382/164089529-20e523d1-430a-44d0-84f9-be63285d8414.png)
+
 
 ## Usage examples 
 
@@ -10,7 +12,7 @@ Modified from https://github.com/ros2/turtlebot2_demo/tree/a612ef2b9b63ba9d19513
 ros2 run depthimage_to_pointcloud2 depthimage_to_pointcloud2_node --ros-args -r depth:=/my_robot/my_depth_sensor/image -r depth_camera_info:=/my_robot/my_depth_sensor/camera_info -r pointcloud2:=/my_depth_sensor_pointcloud2 -r __node:=my_new_node_name -p range_max:=19.0 -p use_quiet_nan:=false
 ```
 
-Using color from a rgb image:
+Using [color](https://wiki.ros.org/rviz/DisplayTypes/PointCloudShared#channels) from a rgb image:
 ```
 ros2 run depthimage_to_pointcloud2 depthimage_to_pointcloud2_node --ros-args -r depth:=/my_robot/my_depth_sensor/image -r depth_camera_info:=/my_robot/my_depth_sensor/camera_info -r pointcloud2:=/my_depth_sensor_pointcloud2 -r __node:=my_new_node_name -p range_max:=19.0 -p use_quiet_nan:=false -p colorful:=true -r image:=/my_robot/my_rgb_image
 ```
