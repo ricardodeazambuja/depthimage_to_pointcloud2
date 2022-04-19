@@ -4,9 +4,17 @@ Modified from https://github.com/ros2/turtlebot2_demo/tree/a612ef2b9b63ba9d19513
 ## Usage examples 
 
 ### [Command line remapping](https://docs.ros.org/en/galactic/How-To-Guides/Node-arguments.html):
+
+#### Using the executable directly:
 ```
-ros2 run depthimage_to_pointcloud2 depthimage_to_pointcloud2_node --ros-args -r depth:=/my_depth_sensor/image -r depth_camera_info:=/my_depth_sensor/camera_info -r pointcloud2:=/my_output_topic -r __node:=my_new_node_name -p range_max:=19.0 -p use_quiet_nan:=false
+ros2 run depthimage_to_pointcloud2 depthimage_to_pointcloud2_node --ros-args -r depth:=/my_robot/my_depth_sensor/image -r depth_camera_info:=/my_robot/my_depth_sensor/camera_info -r pointcloud2:=/my_depth_sensor_pointcloud2 -r __node:=my_new_node_name -p range_max:=19.0 -p use_quiet_nan:=false
 ```
+
+#### Or using the launch file:
+```
+ros2 launch depthimage_to_pointcloud2 depthimage_to_pointcloud2.launch.py full_sensor_topic:=/my_robot/my_depth_sensor range_max:=19.0 use_quiet_nan:=false
+```
+
 __Note:__
 * `use_quiet_nan:=true` will show any invalid or out-of-range point as a quiet NaN
 * `use_quiet_nan:=false` will show any invalid or out-of-range point as a depth with value range_max (when `range_max!=0.0`).
