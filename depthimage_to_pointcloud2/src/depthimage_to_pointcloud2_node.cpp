@@ -44,6 +44,8 @@ class Depthimage2Pointcloud2 : public rclcpp::Node
     : Node("depthimage_to_pointcloud2_node", options)
     {
       range_max = this->declare_parameter("range_max", 0.0);
+      use_quiet_nan = this->declare_parameter("use_quiet_nan", true);
+
       g_pub_point_cloud = this->create_publisher<sensor_msgs::msg::PointCloud2>("pointcloud2", 10);
 
       image_sub = this->create_subscription<sensor_msgs::msg::Image>(
@@ -83,9 +85,9 @@ class Depthimage2Pointcloud2 : public rclcpp::Node
       model.fromCameraInfo(g_cam_info);
 
       if (image->encoding == sensor_msgs::image_encodings::TYPE_16UC1) {
-        depthimage_to_pointcloud2::convert<uint16_t>(image, cloud_msg, model, range_max);
+        depthimage_to_pointcloud2::convert<uint16_t>(image, cloud_msg, model, range_max, use_quiet_nan);
       } else if (image->encoding == sensor_msgs::image_encodings::TYPE_32FC1) {
-        depthimage_to_pointcloud2::convert<float>(image, cloud_msg, model, range_max);
+        depthimage_to_pointcloud2::convert<float>(image, cloud_msg, model, range_max, use_quiet_nan);
       } else {
         RCUTILS_LOG_WARN_THROTTLE(RCUTILS_STEADY_TIME, 5000,
           "Depth image has unsupported encoding [%s]", image->encoding.c_str());
@@ -105,6 +107,7 @@ class Depthimage2Pointcloud2 : public rclcpp::Node
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_sub;
     rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr cam_info_sub;
     double range_max;
+    bool use_quiet_nan;
 };
 
 int main(int argc, char * argv[])

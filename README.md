@@ -5,8 +5,11 @@ Modified from https://github.com/ros2/turtlebot2_demo/tree/a612ef2b9b63ba9d19513
 
 ### [Command line remapping](https://docs.ros.org/en/galactic/How-To-Guides/Node-arguments.html):
 ```
-ros2 run depthimage_to_pointcloud2 depthimage_to_pointcloud2_node --ros-args -r depth:=/my_depth_sensor/image -r depth_camera_info:=/my_depth_sensor/camera_info -r pointcloud2:=/my_output_topic -r __node:=my_new_node_name -p range_max:=19.0
+ros2 run depthimage_to_pointcloud2 depthimage_to_pointcloud2_node --ros-args -r depth:=/my_depth_sensor/image -r depth_camera_info:=/my_depth_sensor/camera_info -r pointcloud2:=/my_output_topic -r __node:=my_new_node_name -p range_max:=19.0 -p use_quiet_nan:=false
 ```
+__Note:__
+* `use_quiet_nan:=true` will show any invalid or out-of-range point as a quiet NaN
+* `use_quiet_nan:=false` will show any invalid or out-of-range point as a depth with value range_max (when `range_max!=0.0`).
 
 ### [Launch file](https://docs.ros.org/en/galactic/Tutorials/Launch/Creating-Launch-Files.html?highlight=remappings):
 #### Simple
@@ -19,7 +22,7 @@ def generate_launch_description():
         executable="depthimage_to_pointcloud2_node",
         output='screen',
         name=`my_node_name`,
-        parameters=[{'range_max': '0.0'}],
+        parameters=[{'range_max': '19.0', 'use_quiet_nan': 'false'}],
         remappings=[
             ("depth", "/my_depth_sensor/image"s),
             ("depth_camera_info", "/my_depth_sensor/camera_info"),
@@ -46,12 +49,17 @@ def generate_launch_description():
             'range_max',
             default_value='0.0',
             description='Max range of depth sensor'),
+        DeclareLaunchArgument(
+            'use_quiet_nan',
+            default_value='true',
+            description='Use quiet NaN instead of range_max'),
         Node(
         package="depthimage_to_pointcloud2",
         executable="depthimage_to_pointcloud2_node",
         output='screen',
         name=[PythonExpression(["'", LaunchConfiguration('full_sensor_topic'), "'.split('/')[-1]"]), '_depth2pc2'],
-        parameters=[{'range_max': LaunchConfiguration('range_max')}],
+        parameters=[{'range_max': LaunchConfiguration('range_max'),
+                     'use_quiet_nan': LaunchConfiguration('use_quiet_nan')}],
         remappings=[
             ("depth", [LaunchConfiguration('full_sensor_topic'), "/image"]),
             ("depth_camera_info", [LaunchConfiguration('full_sensor_topic'), "/camera_info"]),

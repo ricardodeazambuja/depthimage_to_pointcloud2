@@ -53,7 +53,8 @@ void convert(
   const sensor_msgs::msg::Image::ConstSharedPtr & depth_msg,
   sensor_msgs::msg::PointCloud2::SharedPtr & cloud_msg,
   const image_geometry::PinholeCameraModel & model,
-  double range_max = 0.0)
+  double range_max = 0.0,
+  bool use_quiet_nan = false)
 {
   // Use correct principal point from calibration
   float center_x = model.cx();
@@ -76,16 +77,22 @@ void convert(
 
       // Missing points denoted by NaNs
       if (!DepthTraits<T>::valid(depth)) {
-        if (range_max != 0.0) {
+        if (range_max != 0.0 && !use_quiet_nan) {
           depth = DepthTraits<T>::fromMeters(range_max);
         } else {
           *iter_x = *iter_y = *iter_z = bad_point;
           continue;
         }
       } else if (range_max != 0.0) {
-        if (depth > DepthTraits<T>::fromMeters(range_max)) {
-          *iter_x = *iter_y = *iter_z = bad_point;
-          continue;
+        T depth_max = DepthTraits<T>::fromMeters(range_max);
+        if (depth > depth_max) {
+          if (use_quiet_nan) {
+            *iter_x = *iter_y = *iter_z = bad_point;
+            continue;
+          } else {
+            depth = depth_max;
+          }
+
         }
       }
 
