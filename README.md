@@ -115,4 +115,9 @@ And publish the pointcloud2 on:
 ```
 /depth_sensor_pointcloud2
 ```
+If you want to colorize the pointcloud2 using an external rgb image (with the same dimensions as the depth image), set the parameter `rgb_image_topic` with the rgb image topic:
+```
+$ ros2 launch depthimage_to_pointcloud2 depthimage_to_pointcloud2.launch.py full_sensor_topic:=/my_weird/depth_sensor rgb_image_topic:=/my_weird/rgb_image
+```
+
 Finally, the node name will be `/depth_sensor_pointcloud2` because it gets the `depth_sensor` after splitting (`\`) the `full_sensor_topic` and getting the last item.
