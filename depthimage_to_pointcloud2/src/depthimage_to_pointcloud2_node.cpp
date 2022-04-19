@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cv_bridge/cv_bridge.h>
+#include <opencv2/imgproc/imgproc.hpp>
+
 #include <depthimage_to_pointcloud2/depth_conversions.hpp>
+
 #include <image_geometry/pinhole_camera_model.h>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/image_encodings.hpp>
@@ -45,13 +49,34 @@ class Depthimage2Pointcloud2 : public rclcpp::Node
     {
       range_max = this->declare_parameter("range_max", 0.0);
       use_quiet_nan = this->declare_parameter("use_quiet_nan", true);
+      colorful = this->declare_parameter("colorful", false);
 
       g_pub_point_cloud = this->create_publisher<sensor_msgs::msg::PointCloud2>("pointcloud2", 10);
 
-      image_sub = this->create_subscription<sensor_msgs::msg::Image>(
+      if (colorful){
+        image_sub = this->create_subscription<sensor_msgs::msg::Image>(
+          "image", 10, std::bind(&Depthimage2Pointcloud2::imageCb, this, _1));
+      }
+
+      depthimage_sub = this->create_subscription<sensor_msgs::msg::Image>(
         "depth", 10, std::bind(&Depthimage2Pointcloud2::depthCb, this, _1));
       cam_info_sub = this->create_subscription<sensor_msgs::msg::CameraInfo>(
         "depth_camera_info", 10, std::bind(&Depthimage2Pointcloud2::infoCb, this, _1));
+    }
+
+  private:
+    void imageCb(const sensor_msgs::msg::Image::SharedPtr msg)
+    {
+
+      try
+      {
+          cv_ptr = cv_bridge::toCvShare(msg, msg->encoding);
+      }
+      catch (cv_bridge::Exception& e)
+      {
+          RCLCPP_ERROR(this->get_logger(), "cv_bridge exception: %s", e.what());
+          return;
+      }
     }
 
   private:
@@ -74,10 +99,10 @@ class Depthimage2Pointcloud2 : public rclcpp::Node
       cloud_msg->is_dense = false;
       cloud_msg->is_bigendian = false;
       cloud_msg->fields.clear();
-      cloud_msg->fields.reserve(1);
+      cloud_msg->fields.reserve(2);
 
       sensor_msgs::PointCloud2Modifier pcd_modifier(*cloud_msg);
-      pcd_modifier.setPointCloud2FieldsByString(1, "xyz");
+      pcd_modifier.setPointCloud2FieldsByString(2, "xyz", "rgb");
 
       // g_cam_info here is a sensor_msg::msg::CameraInfo::SharedPtr,
       // which we get from the depth_camera_info topic.
@@ -85,9 +110,9 @@ class Depthimage2Pointcloud2 : public rclcpp::Node
       model.fromCameraInfo(g_cam_info);
 
       if (image->encoding == sensor_msgs::image_encodings::TYPE_16UC1) {
-        depthimage_to_pointcloud2::convert<uint16_t>(image, cloud_msg, model, range_max, use_quiet_nan);
+        depthimage_to_pointcloud2::convert<uint16_t>(image, cloud_msg, model, range_max, use_quiet_nan, cv_ptr);
       } else if (image->encoding == sensor_msgs::image_encodings::TYPE_32FC1) {
-        depthimage_to_pointcloud2::convert<float>(image, cloud_msg, model, range_max, use_quiet_nan);
+        depthimage_to_pointcloud2::convert<float>(image, cloud_msg, model, range_max, use_quiet_nan, cv_ptr);
       } else {
         RCUTILS_LOG_WARN_THROTTLE(RCUTILS_STEADY_TIME, 5000,
           "Depth image has unsupported encoding [%s]", image->encoding.c_str());
@@ -104,10 +129,14 @@ class Depthimage2Pointcloud2 : public rclcpp::Node
 
     sensor_msgs::msg::CameraInfo::SharedPtr g_cam_info;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr g_pub_point_cloud;
+    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr depthimage_sub;
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_sub;
     rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr cam_info_sub;
+    
+    cv_bridge::CvImageConstPtr cv_ptr;
     double range_max;
     bool use_quiet_nan;
+    bool colorful;
 };
 
 int main(int argc, char * argv[])

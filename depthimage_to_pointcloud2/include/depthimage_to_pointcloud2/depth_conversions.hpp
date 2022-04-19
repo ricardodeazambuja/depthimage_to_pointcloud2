@@ -44,6 +44,9 @@
 
 #include <limits>
 
+#include <cv_bridge/cv_bridge.h>
+#include <opencv2/imgproc/imgproc.hpp>
+
 namespace depthimage_to_pointcloud2
 {
 
@@ -54,7 +57,8 @@ void convert(
   sensor_msgs::msg::PointCloud2::SharedPtr & cloud_msg,
   const image_geometry::PinholeCameraModel & model,
   double range_max = 0.0,
-  bool use_quiet_nan = false)
+  bool use_quiet_nan = false,
+ cv_bridge::CvImageConstPtr cv_ptr = nullptr)
 {
   // Use correct principal point from calibration
   float center_x = model.cx();
@@ -69,10 +73,11 @@ void convert(
   sensor_msgs::PointCloud2Iterator<float> iter_x(*cloud_msg, "x");
   sensor_msgs::PointCloud2Iterator<float> iter_y(*cloud_msg, "y");
   sensor_msgs::PointCloud2Iterator<float> iter_z(*cloud_msg, "z");
+  sensor_msgs::PointCloud2Iterator<float> iter_rgb(*cloud_msg, "rgb");
   const T * depth_row = reinterpret_cast<const T *>(&depth_msg->data[0]);
   int row_step = depth_msg->step / sizeof(T);
   for (int v = 0; v < static_cast<int>(cloud_msg->height); ++v, depth_row += row_step) {
-    for (int u = 0; u < static_cast<int>(cloud_msg->width); ++u, ++iter_x, ++iter_y, ++iter_z) {
+    for (int u = 0; u < static_cast<int>(cloud_msg->width); ++u, ++iter_x, ++iter_y, ++iter_z, ++iter_rgb) {
       T depth = depth_row[u];
 
       // Missing points denoted by NaNs
@@ -80,14 +85,14 @@ void convert(
         if (range_max != 0.0 && !use_quiet_nan) {
           depth = DepthTraits<T>::fromMeters(range_max);
         } else {
-          *iter_x = *iter_y = *iter_z = bad_point;
+          *iter_x = *iter_y = *iter_z = *iter_rgb = bad_point;
           continue;
         }
       } else if (range_max != 0.0) {
         T depth_max = DepthTraits<T>::fromMeters(range_max);
         if (depth > depth_max) {
           if (use_quiet_nan) {
-            *iter_x = *iter_y = *iter_z = bad_point;
+            *iter_x = *iter_y = *iter_z = *iter_rgb = bad_point;
             continue;
           } else {
             depth = depth_max;
@@ -100,6 +105,27 @@ void convert(
       *iter_x = (u - center_x) * depth * constant_x;
       *iter_y = (v - center_y) * depth * constant_y;
       *iter_z = DepthTraits<T>::toMeters(depth);
+      
+      // and RGB
+      int rgb = 0x000000;
+      if (cv_ptr != nullptr) {
+        if (cv_ptr->image.type()==CV_8UC1) {
+          //grayscale
+          rgb &= cv_ptr->image.at<uchar>(v,u);
+        } else if(cv_ptr->image.type()==CV_8UC3) {
+          //RGB
+          rgb = (int)cv_ptr->image.at<cv::Vec3b>(0, 0)[0];
+          
+        } else if(cv_ptr->image.type()==CV_8UC3 || cv_ptr->image.type()==CV_8UC4) {
+          //RGB or RGBA
+          if (cv_ptr->image.rows > v && cv_ptr->image.cols > u){
+            rgb |= ((int)cv_ptr->image.at<cv::Vec4b>(v, u)[2]) << 16;
+            rgb |= ((int)cv_ptr->image.at<cv::Vec4b>(v, u)[1]) << 8;
+            rgb |= ((int)cv_ptr->image.at<cv::Vec4b>(v, u)[0]);
+          }
+        }
+      }
+      *iter_rgb = *reinterpret_cast<float*>(&rgb);
     }
   }
 }

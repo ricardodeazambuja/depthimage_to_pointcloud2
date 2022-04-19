@@ -10,9 +10,19 @@ Modified from https://github.com/ros2/turtlebot2_demo/tree/a612ef2b9b63ba9d19513
 ros2 run depthimage_to_pointcloud2 depthimage_to_pointcloud2_node --ros-args -r depth:=/my_robot/my_depth_sensor/image -r depth_camera_info:=/my_robot/my_depth_sensor/camera_info -r pointcloud2:=/my_depth_sensor_pointcloud2 -r __node:=my_new_node_name -p range_max:=19.0 -p use_quiet_nan:=false
 ```
 
-#### Or using the launch file:
+Using color from a rgb image:
 ```
-ros2 launch depthimage_to_pointcloud2 depthimage_to_pointcloud2.launch.py full_sensor_topic:=/my_robot/my_depth_sensor range_max:=19.0 use_quiet_nan:=false
+ros2 run depthimage_to_pointcloud2 depthimage_to_pointcloud2_node --ros-args -r depth:=/my_robot/my_depth_sensor/image -r depth_camera_info:=/my_robot/my_depth_sensor/camera_info -r pointcloud2:=/my_depth_sensor_pointcloud2 -r __node:=my_new_node_name -p range_max:=19.0 -p use_quiet_nan:=false -p colorful:=true -r image:=/my_robot/my_rgb_image
+```
+#### Or using the launch file:
+
+```
+ros2 launch depthimage_to_pointcloud2 depthimage_to_pointcloud2.launch.py full_sensor_topic:=/my_robot/my_depth_sensor range_max:=19.0 use_quiet_nan:=false rgb_image_topic:=/my_robot/my_rgb_image
+```
+
+Using color from a rgb image:
+```
+ros2 launch depthimage_to_pointcloud2 depthimage_to_pointcloud2.launch.py full_sensor_topic:=/my_robot/my_depth_sensor range_max:=19.0 use_quiet_nan:=false rgb_image_topic:=/my_robot/my_rgb_image
 ```
 
 __Note:__
@@ -30,15 +40,20 @@ def generate_launch_description():
         executable="depthimage_to_pointcloud2_node",
         output='screen',
         name=`my_node_name`,
-        parameters=[{'range_max': '19.0', 'use_quiet_nan': 'false'}],
+        parameters=[{'range_max': '19.0', 
+                     'use_quiet_nan': 'false',
+                     'colorful': 'true'}],
         remappings=[
-            ("depth", "/my_depth_sensor/image"s),
+            ("image", "/my_rgb_image"),
+            ("depth", "/my_depth_sensor/image"),
             ("depth_camera_info", "/my_depth_sensor/camera_info"),
             ("pointcloud2", "/my_output_topic")
             ]
         )
     ])
 ```
+__Note:__
+* Just set `'colorful': 'false'` if you don't want to use the color from a rgb image.
 
 #### Complex (using the annoying `PythonExpression`)
 ```
@@ -61,14 +76,20 @@ def generate_launch_description():
             'use_quiet_nan',
             default_value='true',
             description='Use quiet NaN instead of range_max'),
+        DeclareLaunchArgument(
+            'rgb_image_topic',
+            default_value='',
+            description='Colorize the point cloud from external RGB image topic'),
         Node(
         package="depthimage_to_pointcloud2",
         executable="depthimage_to_pointcloud2_node",
         output='screen',
         name=[PythonExpression(["'", LaunchConfiguration('full_sensor_topic'), "'.split('/')[-1]"]), '_depth2pc2'],
         parameters=[{'range_max': LaunchConfiguration('range_max'),
-                     'use_quiet_nan': LaunchConfiguration('use_quiet_nan')}],
+                     'use_quiet_nan': LaunchConfiguration('use_quiet_nan'),
+                     'colorful': PythonExpression(["'true' if '", LaunchConfiguration('rgb_image_topic'), "' else 'false'"])}],
         remappings=[
+            ("image", PythonExpression(["'", LaunchConfiguration('rgb_image_topic'), "' if '", LaunchConfiguration('rgb_image_topic'), "' else 'false'"])),
             ("depth", [LaunchConfiguration('full_sensor_topic'), "/image"]),
             ("depth_camera_info", [LaunchConfiguration('full_sensor_topic'), "/camera_info"]),
             ("pointcloud2", [PythonExpression(["'", LaunchConfiguration('full_sensor_topic'), "'.split('/')[-1]"]), "_pointcloud2"])
