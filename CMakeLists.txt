@@ -11,11 +11,11 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
-
 find_package(image_geometry REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(cv_bridge)
+find_package(cv_bridge REQUIRED)
+find_package(message_filters REQUIRED)
 
 include_directories(include)
 
@@ -27,7 +27,8 @@ ament_target_dependencies(depthimage_to_pointcloud2_node
   "image_geometry"
   "rclcpp"
   "sensor_msgs"
-  "cv_bridge"
+  "cv_bridge"  # message_filters 대신 cv_bridge를 사용합니다.
+  "message_filters"
 )
 
 install(TARGETS depthimage_to_pointcloud2_node
@@ -41,7 +42,6 @@ install(DIRECTORY
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-
   ament_lint_auto_find_test_dependencies()
 endif()
 
