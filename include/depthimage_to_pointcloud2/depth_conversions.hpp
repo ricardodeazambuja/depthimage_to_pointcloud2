@@ -125,7 +125,7 @@ void convert(
           }
         }
       }
-      *iter_rgb = *reinterpret_cast<float*>(&rgb);
+      std::memcpy(&(*iter_rgb), &rgb, sizeof(int));
     }
   }
 }
