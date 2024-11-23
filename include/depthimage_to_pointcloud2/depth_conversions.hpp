@@ -116,20 +116,14 @@ void convert(
       // and RGB
       int rgb = 0x000000;
       if (cv_ptr != nullptr) {
-        if (cv_ptr->image.type()==CV_8UC1) {
-          //grayscale
-          rgb &= cv_ptr->image.at<uchar>(v,u);
-        } else if(cv_ptr->image.type()==CV_8UC3) {
-          //RGB
-          rgb = (int)cv_ptr->image.at<cv::Vec3b>(0, 0)[0];
-          
-        } else if(cv_ptr->image.type()==CV_8UC3 || cv_ptr->image.type()==CV_8UC4) {
-          //RGB or RGBA
-          if (cv_ptr->image.rows > v && cv_ptr->image.cols > u){
-            rgb |= ((int)cv_ptr->image.at<cv::Vec4b>(v, u)[2]) << 16;
-            rgb |= ((int)cv_ptr->image.at<cv::Vec4b>(v, u)[1]) << 8;
-            rgb |= ((int)cv_ptr->image.at<cv::Vec4b>(v, u)[0]);
-          }
+        if (cv_ptr->image.type() == CV_8UC1) {
+          // grayscale
+          rgb = cv_ptr->image.at<uchar>(v, u);
+          rgb = (rgb << 16) | (rgb << 8) | rgb; // Convert grayscale to RGB
+        } else if (cv_ptr->image.type() == CV_8UC3) {
+          // RGB
+          cv::Vec3b intensity = cv_ptr->image.at<cv::Vec3b>(v, u);
+          rgb = (intensity[0] << 16) | (intensity[1] << 8) | intensity[2]; // Convert BGR to RGB correctly
         }
       }
       std::memcpy(&(*iter_rgb), &rgb, sizeof(int));
