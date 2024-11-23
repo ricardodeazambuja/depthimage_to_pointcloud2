@@ -5,11 +5,14 @@
   <description>A simple node to convert a depth image and camera info into a PointCloud2.</description>
   <license>Apache License 2.0</license>
 
+  <maintainer email="hans324oh@gmail.com">Hyeonsu Oh</maintainer>
+
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>image_geometry</depend>
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
+  <depend>message_filters</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
