@@ -38,13 +38,20 @@
 
 #include "depthimage_to_pointcloud2/depth_traits.hpp"
 
+#include <rclcpp/version.h>
+#if RCLCPP_VERSION_MAJOR >= 28
+#include <cv_bridge/cv_bridge.hpp>
+#include <image_geometry/pinhole_camera_model.hpp>
+#else
+#include <cv_bridge/cv_bridge.h>
 #include <image_geometry/pinhole_camera_model.h>
+#endif
+
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/point_cloud2_iterator.hpp>
 
 #include <limits>
 
-#include <cv_bridge/cv_bridge.h>
 #include <opencv2/imgproc/imgproc.hpp>
 
 namespace depthimage_to_pointcloud2
@@ -119,8 +126,7 @@ void convert(
           rgb = (intensity[0] << 16) | (intensity[1] << 8) | intensity[2]; // Convert BGR to RGB correctly
         }
       }
-      *iter_rgb = *reinterpret_cast<float*>(&rgb);
-
+      std::memcpy(&(*iter_rgb), &rgb, sizeof(int));
     }
   }
 }
